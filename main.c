@@ -1,14 +1,16 @@
 #include <curses.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
 
 #define WIDTH 20
 #define HEIGHT 10
+#define MAX_LENGTH 100
 
 typedef struct Snake {
-    int x[100], y[100];
+    int x[MAX_LENGTH], y[MAX_LENGTH];
     int length;
-     int direction;
+    int direction;
 } Snake;
 
 typedef struct Apple {
@@ -51,7 +53,24 @@ void input(Snake* snake) {
         case KEY_RIGHT:
             if (snake->direction != KEY_LEFT) snake->direction = KEY_RIGHT;
             break;
+        case 'q':
+            endwin();
+            exit(0);
     }
+}
+
+int is_collision(Snake* snake) {
+    if (snake->x[0] < 0 || snake->x[0] >= WIDTH || snake->y[0] < 0 || snake->y[0] >= HEIGHT) {
+        return 1;
+    }
+
+    for (int i = 1; i < snake->length; i++) {
+        if (snake->x[0] == snake->x[i] && snake->y[0] == snake->y[i]) {
+            return 1;
+        }
+    }
+
+    return 0;
 }
 
 void logic(Snake* snake, Apple* apple) {
@@ -72,6 +91,12 @@ void logic(Snake* snake, Apple* apple) {
         case KEY_RIGHT:
             snake->x[0]++;
             break;
+    }
+
+    if (is_collision(snake)) {
+        endwin();
+        printf("Game Over! Score: %d\n", snake->length - 1);
+        exit(0);
     }
 
     if (snake->x[0] == apple->x && snake->y[0] == apple->y) {
